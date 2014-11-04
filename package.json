@@ -1,6 +1,6 @@
 {
   "name": "compute-multiply",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Computes an element-wise multiplication of a numeric array.",
   "author": {
     "name": "Athan Reines",
