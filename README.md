@@ -28,7 +28,7 @@ Computes an element-wise multiplication of an input `array`. `x` may be either a
 
 ``` javascript
 multiply( [ 2, 1, 4, 2 ], -4 );
-// returns [ -8, -4, -12, -8 ]
+// returns [ -8, -4, -16, -8 ]
 
 multiply( [ 2, 1, 4, 2 ], [ 1, 2, 3, 3 ] );
 // returns [ 2, 2, 12, 6 ]
