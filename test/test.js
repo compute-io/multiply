@@ -90,51 +90,6 @@ describe( 'compute-multiply', function tests() {
 		}
 	});
 
-
-	it( 'should throw an error if provided an array and an unsupported second factor', function test() {
-		var values = [
-			'5',
-			true,
-			undefined,
-			null,
-			NaN,
-			{},
-			function(){},
-			matrix( [2,2] )
-		];
-
-		for ( var i = 0; i < values.length; i++ ) {
-			expect( badValue( values[i] ) ).to.throw( Error );
-		}
-		function badValue( value ) {
-			return function() {
-				multiply( [1,2,3], value );
-			};
-		}
-	});
-
-	it( 'should throw an error if provided a matrix and an unsupported second factor', function test() {
-		var values = [
-			'5',
-			true,
-			undefined,
-			null,
-			NaN,
-			{},
-			function(){},
-			[]
-		];
-
-		for ( var i = 0; i < values.length; i++ ) {
-			expect( badValue( values[i] ) ).to.throw( Error );
-		}
-		function badValue( value ) {
-			return function() {
-				multiply( matrix( [2,2] ), value );
-			};
-		}
-	});
-
 	it( 'should return NaN if the first argument is neither a number, array-like, or matrix-like', function test() {
 		var values = [
 			// '5', // valid as is array-like (length)
@@ -151,16 +106,33 @@ describe( 'compute-multiply', function tests() {
 		}
 	});
 
+	it( 'should return NaN if the first argument is a number and the second argument is neither numberic, array-like, or matrix-like', function test() {
+		var values = [
+			// '5', // valid as is array-like (length)
+			true,
+			undefined,
+			null,
+			NaN,
+			function(){},
+			{}
+		];
+
+		for ( var i = 0; i < values.length; i++ ) {
+			assert.isTrue( isnan( multiply( 1, values[ i ] ) ) );
+		}
+	});
+
 	it( 'should multiply two numbers', function test() {
 		assert.strictEqual( multiply( 2, 3 ), 6 );
 		assert.strictEqual( multiply( 2, 0 ), 0 );
 	});
 
-	it( 'should throw an error if provided a number and an array as the second argument', function test() {
-		expect( foo ).to.throw( Error );
-		function foo() {
-			multiply( 2, [ 1, 1 ]);
-		}
+	it( 'should calculate the product of a scalar and an array when the argument order is reversed', function test() {
+		var data, actual, expected;
+		data = [ 1, 2 ];
+		actual = multiply( 2, data );
+		expected = [ 2, 4 ];
+		assert.deepEqual( actual, expected );
 	});
 
 	it( 'should perform an element-wise multiplication when provided a plain array and a scalar', function test() {
@@ -301,6 +273,14 @@ describe( 'compute-multiply', function tests() {
 		];
 
 		actual = multiply( data, 0, {
+			'accessor': getValue
+		});
+		assert.notEqual( actual, data );
+
+		assert.deepEqual( actual, expected );
+
+		// reverse argument order
+		actual = multiply( 0, data, {
 			'accessor': getValue
 		});
 		assert.notEqual( actual, data );
