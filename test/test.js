@@ -90,22 +90,22 @@ describe( 'compute-multiply', function tests() {
 		}
 	});
 
-	it( 'should throw an error if provided a number as the first argument and an option', function test() {
-	var values = [
-		{'accessor': function getValue( d ) { return d; } },
-		{'copy': false},
-		{'path': 'x'},
-	];
+	it( 'should throw an error if provided a number as the first argument and an not applicable option', function test() {
+		var values = [
+			{'accessor': function getValue( d ) { return d; } },
+			{'copy': false},
+			{'path': 'x'},
+		];
 
-	for ( var i = 0; i < values.length; i++ ) {
-		expect( badValue( values[i] ) ).to.throw( Error );
-	}
-	function badValue( value ) {
-		return function() {
-			multiply( 1, [1,2,3], value );
-		};
-	}
-});
+		for ( var i = 0; i < values.length; i++ ) {
+			expect( badValue( values[i] ) ).to.throw( Error );
+		}
+		function badValue( value ) {
+			return function() {
+				multiply( 1, [1,2,3], value );
+			};
+		}
+	});
 
 	it( 'should return NaN if the first argument is neither a number, array-like, or matrix-like', function test() {
 		var values = [

@@ -22,7 +22,7 @@ var multiply = require( 'compute-multiply' );
 
 #### multiply( x, y[, opts] )
 
-Computes an element-wise multiplication. `x` can be a [`number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number), [`array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array), [`typed array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays) or [`matrix`](https://github.com/dstructs/matrix). `y` has to be either an `array` or `matrix` of equal dimensions as `x` or a single number. The function returns either an `array` with length equal to that of the input `array`, a `matrix` with equal dimensions as input `x` or a single number.
+Computes an element-wise multiplication. `x` can be a [`number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number), [`array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array), [`typed array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays) or [`matrix`](https://github.com/dstructs/matrix). `y` has to be either an `array` or `matrix` of equal dimensions as `x` or a single number. The function returns either an `array` with the same length as the input `array`, a `matrix` with the same dimensions as the input `matrix` or a single number.
 
 ``` javascript
 var matrix = require( 'dstructs-matrix' ),
@@ -290,6 +290,21 @@ __Note__: mutation is the `array` or `matrix` equivalent of an __times-equal__ (
 	// returns Int8Array( [0,0,0] );
 	```
 
+*	When calling the function with a numeric value as the first argument and a `matrix` or `array` as the second argument, only the `dtype` option is applicable.
+
+	``` javascript
+		// Valid:
+		var out = multiply( 2.1, [ 0, 1, 2 ], {
+			'dtype': 'int8'
+		});
+		// returns Int8Array( [0,2,4] )
+
+		// Not valid:
+		var out = add( 0.5, [ 0, 1, 2 ], {
+			'copy': false
+		});
+		// throws an error
+	```
 
 ## Examples
 
