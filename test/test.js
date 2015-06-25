@@ -95,7 +95,6 @@ describe( 'compute-multiply', function tests() {
 		{'accessor': function getValue( d ) { return d; } },
 		{'copy': false},
 		{'path': 'x'},
-		{'dtype': 'int32'},
 	];
 
 	for ( var i = 0; i < values.length; i++ ) {
@@ -151,6 +150,18 @@ describe( 'compute-multiply', function tests() {
 		actual = multiply( 2, data );
 		expected = [ 2, 4 ];
 		assert.deepEqual( actual, expected );
+	});
+
+	it( 'should calculate the product of a scalar and a matrix and cast to a different dtype when the argument order is reversed', function test() {
+		var data, actual, expected;
+		data = matrix( new Int8Array( [1,2,3,4] ), [2,2] );
+		actual = multiply( 4, data, {
+			'dtype': 'int32'
+		});
+		expected = matrix( new Int32Array( [4,8,12,16] ), [2,2] );
+
+		assert.strictEqual( actual.dtype, 'int32' );
+		assert.deepEqual( actual.data, expected.data );
 	});
 
 	it( 'should perform an element-wise multiplication when provided a plain array and a scalar', function test() {
