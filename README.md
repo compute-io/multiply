@@ -106,10 +106,10 @@ function getValue( d, i ) {
 var out = multiply( data, 4, {
 	'accessor': getValue
 });
-// returns [ 9, 7, 12, 7, 6 ]
+// returns [ 20, 12, 32, 12, 8 ]
 ```
 
-When adding values between two object `arrays`, provide an accessor `function` which accepts `3` arguments.
+When multiplying values between two object `arrays`, provide an accessor `function` which accepts `3` arguments.
 
 ``` javascript
 var data = [
@@ -138,7 +138,7 @@ function getValue( d, i, j ) {
 var out = multiply( data, arr, {
 	'accessor': getValue
 });
-// returns [ 9, 8, 14, 8, 5 ]
+// returns [ 20, 15, 48, 15, 6 ]
 ```
 
 __Note__: `j` corresponds to the input `array` index, where `j=0` is the index for the first input `array` and `j=1` is the index for the second input `array`.
@@ -159,10 +159,10 @@ var out = multiply( data, 2, 'x|1', '|' );
 /*
 	[
 		{'x':[0,4]},
-		{'x':[1,5]},
-		{'x':[2,7]},
-		{'x':[3,9]},
-		{'x':[4,13]}
+		{'x':[1,6]},
+		{'x':[2,10]},
+		{'x':[3,14},
+		{'x':[4,22]}
 	]
 */
 
@@ -180,13 +180,13 @@ data = new Int8Array( [ 1, 2, 3 ] );
 out = multiply( data, 2, {
 	'dtype': 'int32'
 });
-// returns Int32Array( [3,4,5] )
+// returns Int32Array( [2,4,6] )
 
 // Works for plain arrays, as well...
 out = multiply( [ 1, 2, 3 ], 2, {
 	'dtype': 'uint8'
 });
-// returns Uint8Array( [3,4,5] )
+// returns Uint8Array( [2,4,6] )
 ```
 
 By default, the function returns a new data structure. To mutate the input data structure, set the `copy` option to `false`.
