@@ -1,9 +1,16 @@
+/* global require, describe, it */
 'use strict';
 
 // MODULES //
 
 var // Expectation library:
 	chai = require( 'chai' ),
+
+	// Matrix data structure:
+	matrix = require( 'dstructs-matrix' ),
+
+	// Validate if a value is NaN:
+	isnan = require( 'validate.io-nan' ),
 
 	// Module to be tested:
 	multiply = require( './../lib' );
@@ -23,72 +30,512 @@ describe( 'compute-multiply', function tests() {
 		expect( multiply ).to.be.a( 'function' );
 	});
 
-	it( 'should throw an error if provided a non-array', function test() {
+	it( 'should throw an error if provided an invalid option', function test() {
 		var values = [
-				5,
-				'5',
-				{},
-				true,
-				null,
-				undefined,
-				NaN,
-				function(){}
-			];
+			'5',
+			5,
+			true,
+			undefined,
+			null,
+			NaN,
+			[],
+			{}
+		];
 
 		for ( var i = 0; i < values.length; i++ ) {
 			expect( badValue( values[i] ) ).to.throw( TypeError );
 		}
-
 		function badValue( value ) {
 			return function() {
-				multiply( value, 0 );
+				multiply( [1,2,3], 1, {
+					'accessor': value
+				});
 			};
 		}
 	});
 
-	it( 'should throw an error if not provided an array or number for the second argument', function test() {
+	it( 'should throw an error if provided an array and an unrecognized/unsupported data type option', function test() {
 		var values = [
-				'5',
-				{},
-				true,
-				null,
-				undefined,
-				NaN,
-				function(){}
-			];
+			'beep',
+			'boop'
+		];
 
 		for ( var i = 0; i < values.length; i++ ) {
-			expect( badValue( values[i] ) ).to.throw( TypeError );
+			expect( badValue( values[i] ) ).to.throw( Error );
 		}
-
 		function badValue( value ) {
 			return function() {
-				multiply( [], value );
+				multiply( [1,2,3], 1, {
+					'dtype': value
+				});
 			};
 		}
 	});
 
-	it( 'should throw an error if provided arrays of unequal length', function test() {
-		expect( foo ).to.throw( Error );
-		function foo() {
-			multiply( [1,2], [1,2,3] );
+	it( 'should throw an error if provided a typed-array and an unrecognized/unsupported data type option', function test() {
+		var values = [
+			'beep',
+			'boop'
+		];
+
+		for ( var i = 0; i < values.length; i++ ) {
+			expect( badValue( values[i] ) ).to.throw( Error );
+		}
+		function badValue( value ) {
+			return function() {
+				multiply( new Int8Array([1,2,3]), 1, {
+					'dtype': value
+				});
+			};
 		}
 	});
 
-	it( 'should perform element-wise multiplication', function test() {
-		var data, expected;
+	it( 'should throw an error if provided a matrix and an unrecognized/unsupported data type option', function test() {
+		var values = [
+			'beep',
+			'boop'
+		];
 
-		data = [ 5, 2, 4, 1, 2 ];
-		expected = [ 20, 8, 16, 4, 8 ];
+		for ( var i = 0; i < values.length; i++ ) {
+			expect( badValue( values[i] ) ).to.throw( Error );
+		}
+		function badValue( value ) {
+			return function() {
+				multiply( matrix( [2,2] ), 1, {
+					'dtype': value
+				});
+			};
+		}
+	});
 
-		multiply( data, 4 );
+	it( 'should throw an error if provided a number as the first argument and an not applicable option', function test() {
+		var values = [
+			{'accessor': function getValue( d ) { return d; } },
+			{'copy': false},
+			{'path': 'x'},
+		];
+
+		for ( var i = 0; i < values.length; i++ ) {
+			expect( badValue( values[i] ) ).to.throw( Error );
+		}
+		function badValue( value ) {
+			return function() {
+				multiply( 1, [1,2,3], value );
+			};
+		}
+	});
+
+	it( 'should return NaN if the first argument is neither a number, array-like, or matrix-like', function test() {
+		var values = [
+			// '5', // valid as is array-like (length)
+			true,
+			undefined,
+			null,
+			NaN,
+			function(){},
+			{}
+		];
+
+		for ( var i = 0; i < values.length; i++ ) {
+			assert.isTrue( isnan( multiply( values[ i ], 1 ) ) );
+		}
+	});
+
+	it( 'should return NaN if the first argument is a number and the second argument is neither numberic, array-like, or matrix-like', function test() {
+		var values = [
+			// '5', // valid as is array-like (length)
+			true,
+			undefined,
+			null,
+			NaN,
+			function(){},
+			{}
+		];
+
+		for ( var i = 0; i < values.length; i++ ) {
+			assert.isTrue( isnan( multiply( 1, values[ i ] ) ) );
+		}
+	});
+
+	it( 'should multiply two numbers', function test() {
+		assert.strictEqual( multiply( 2, 3 ), 6 );
+		assert.strictEqual( multiply( 2, 0 ), 0 );
+	});
+
+	it( 'should calculate the product of a scalar and an array when the argument order is reversed', function test() {
+		var data, actual, expected;
+		data = [ 1, 2 ];
+		actual = multiply( 2, data );
+		expected = [ 2, 4 ];
+		assert.deepEqual( actual, expected );
+	});
+
+	it( 'should calculate the product of a scalar and a matrix and cast to a different dtype when the argument order is reversed', function test() {
+		var data, actual, expected;
+		data = matrix( new Int8Array( [1,2,3,4] ), [2,2] );
+		actual = multiply( 4, data, {
+			'dtype': 'int32'
+		});
+		expected = matrix( new Int32Array( [4,8,12,16] ), [2,2] );
+
+		assert.strictEqual( actual.dtype, 'int32' );
+		assert.deepEqual( actual.data, expected.data );
+	});
+
+	it( 'should perform an element-wise multiplication when provided a plain array and a scalar', function test() {
+		var data, actual, expected;
+
+		data = [ 0, 1, 2, 3 ];
+		expected = [
+			0,
+			3,
+			6,
+			9
+		];
+
+		actual = multiply( data, 3 );
+		assert.notEqual( actual, data );
+
+		assert.deepEqual( actual, expected );
+
+		// Mutate...
+		actual = multiply( data, 3, {
+			'copy': false
+		});
+		assert.strictEqual( actual, data );
+
 		assert.deepEqual( data, expected );
 
-		data = [ 5, 2, 4, 1, 2 ];
-		expected = [ 25, 4, 16, 1, -2 ];
+	});
 
-		multiply( data, [5,2,4,1,-1] );
+	it( 'should perform an element-wise multiplication when provided a plain array and another array', function test() {
+		var data, actual, expected;
+
+		data = [ 0, 1, 2, 3 ];
+		expected = [
+			0,
+			1,
+			4,
+			9
+		];
+
+		actual = multiply( data, data );
+		assert.notEqual( actual, data );
+
+		assert.deepEqual( actual, expected );
+
+		// Mutate...
+		actual = multiply( data, data, {
+			'copy': false
+		});
+		assert.strictEqual( actual, data );
+
 		assert.deepEqual( data, expected );
+
+	});
+
+	it( 'should perform an element-wise multiplication when provided a typed array and a scalar', function test() {
+		var data, actual, expected;
+
+		data = new Int8Array( [ 0, 1, 2, 3 ] );
+
+		expected = new Float64Array( [
+			0,
+			3,
+			6,
+			9
+		]);
+
+		actual = multiply( data, 3 );
+		assert.notEqual( actual, data );
+
+		assert.deepEqual( actual, expected );
+
+		// Mutate:
+		actual = multiply( data, 3, {
+			'copy': false
+		});
+		assert.strictEqual( actual, data );
+		expected = new Int8Array( [ 0, 3, 6, 9 ] );
+
+		assert.deepEqual( data, expected );
+	});
+
+	it( 'should perform an element-wise multiplication when provided a typed array and another typed array', function test() {
+		var data, actual, expected;
+
+		data = new Int8Array( [ 0, 1, 2, 3 ] );
+
+		expected = new Float64Array( [
+			0,
+			1,
+			4,
+			9
+		]);
+
+		actual = multiply( data, data );
+		assert.notEqual( actual, data );
+		assert.deepEqual( actual, expected );
+
+		// Mutate:
+
+		actual = multiply( data, data, {
+			'copy': false
+		});
+		expected = new Int8Array( [ 0, 1, 4, 9 ] );
+		assert.strictEqual( actual, data );
+
+		assert.deepEqual( data, expected );
+	});
+
+	it( 'should perform an element-wise multiplication and return an array of a specific type', function test() {
+		var data, actual, expected;
+
+		data = [ 0, 1, 2, 3 ];
+		expected = new Int8Array( [ 0, 4, 8, 12 ] );
+
+		actual = multiply( data, 4, {
+			'dtype': 'int8'
+		});
+		assert.notEqual( actual, data );
+		assert.strictEqual( actual.BYTES_PER_ELEMENT, 1 );
+		assert.deepEqual( actual, expected );
+	});
+
+	it( 'should perform an element-wise multiplication with a scalar using an accessor', function test() {
+		var data, actual, expected;
+
+		data = [
+			[3,0],
+			[4,1],
+			[5,2],
+			[6,3]
+		];
+
+		expected = [
+			0,
+			0,
+			0,
+			0
+		];
+
+		actual = multiply( data, 0, {
+			'accessor': getValue
+		});
+		assert.notEqual( actual, data );
+
+		assert.deepEqual( actual, expected );
+
+		// Mutate:
+		actual = multiply( data, 0, {
+			'accessor': getValue,
+			'copy': false
+		});
+		assert.strictEqual( actual, data );
+
+		assert.deepEqual( data, expected );
+
+		function getValue( d ) {
+			return d[ 1 ];
+		}
+	});
+
+	it( 'should perform an element-wise multiplication two object arrays using an accessor', function test() {
+		var data, actual, expected, y;
+
+		data = [
+			{'x':0},
+			{'x':1},
+			{'x':2},
+			{'x':3}
+		];
+
+		y = [
+			{'y':0},
+			{'y':1},
+			{'y':2},
+			{'y':3}
+		];
+
+		actual = multiply( data, y, {
+			'accessor': getValue
+		});
+
+		expected = [
+			0,
+			1,
+			4,
+			9
+		];
+
+		assert.deepEqual( actual, expected );
+
+		function getValue( d, i, j ) {
+			if ( j === 0 ) {
+				return d.x;
+			} else {
+				return d.y;
+			}
+		}
+
+	});
+
+	it( 'should perform an element-wise multiplication with a scalar and deep set', function test() {
+		var data, actual, expected;
+
+		data = [
+			{'x':[3,0]},
+			{'x':[4,1]},
+			{'x':[5,2]},
+			{'x':[6,3]}
+		];
+		expected = [
+			{'x':[3,0]},
+			{'x':[4,3]},
+			{'x':[5,6]},
+			{'x':[6,9]}
+		];
+
+		actual = multiply( data, 3, {
+			'path': 'x.1'
+		});
+
+		assert.strictEqual( actual, data );
+
+		assert.deepEqual( actual, expected );
+
+		// Specify a path with a custom separator...
+		data = [
+			{'x':[3,0]},
+			{'x':[4,1]},
+			{'x':[5,2]},
+			{'x':[6,3]}
+		];
+		actual = multiply( data, 3, {
+			'path': 'x/1',
+			'sep': '/'
+		});
+		assert.strictEqual( actual, data );
+
+		assert.deepEqual( actual, expected );
+	});
+
+	it( 'should perform an element-wise multiplication using an array and deep set', function test() {
+		var data, actual, expected, y;
+
+		data = [
+			{'x':0},
+			{'x':1},
+			{'x':2},
+			{'x':3}
+		];
+
+		y = [ 0, 1, 2, 3 ];
+
+		actual = multiply( data, y, {
+			path: 'x'
+		});
+
+		expected = [
+			{'x':0},
+			{'x':1},
+			{'x':4},
+			{'x':9}
+		];
+
+		assert.strictEqual( data, actual );
+		assert.deepEqual( data, expected);
+
+		// Custom separator...
+		data = [
+			{'x':[9,0]},
+			{'x':[9,1]},
+			{'x':[9,2]},
+			{'x':[9,3]}
+		];
+
+		data = multiply( data, y, {
+			'path': 'x/1',
+			'sep': '/'
+		});
+		expected = [
+			{'x':[9,0]},
+			{'x':[9,1]},
+			{'x':[9,4]},
+			{'x':[9,9]}
+		];
+
+		assert.deepEqual( data, expected, 'custom separator' );
+	});
+
+	it( 'should perform an element-wise multiplication when provided a matrix', function test() {
+		var mat,
+			out,
+			d1,
+			d2,
+			d3,
+			i;
+
+		d1 = new Int32Array( 100 );
+		d2 = new Int32Array( 100 );
+		d3 = new Int32Array( 100 );
+		for ( i = 0; i < d1.length; i++ ) {
+			d1[ i ] = i;
+			d2[ i ] = i * i;
+			d3[ i ] = i * 2;
+		}
+
+		// Multiply matrix by scalar
+		mat = matrix( d1, [10,10], 'int32' );
+		out = multiply( mat, 2, {
+			'dtype': 'int32'
+		});
+
+		assert.deepEqual( out.data, d3 );
+
+		// Multiply two matrices element-wise
+		mat = matrix( d1, [10,10], 'int32' );
+		out = multiply( mat, mat, {
+			'dtype': 'int32'
+		});
+
+		assert.deepEqual( out.data, d2 );
+
+		// Multiply matrix by scalar and mutate...
+		out = multiply( mat, 2, {
+			'copy': false
+		});
+
+		assert.strictEqual( mat, out );
+		assert.deepEqual( mat.data, d3 );
+	});
+
+	it( 'should perform an element-wise multiplication with a scalar and return a matrix of a specific type', function test() {
+		var mat,
+			out,
+			d1,
+			d2,
+			i;
+
+		d1 = new Int16Array( 100 );
+		d2 = new Uint16Array( 100 );
+		for ( i = 0; i < d1.length; i++ ) {
+			d1[ i ] = i;
+			d2[ i ] = i * 2;
+		}
+		mat = matrix( d1, [10,10], 'int16' );
+		out = multiply( mat, 2, {
+			'dtype': 'uint16'
+		});
+
+		assert.strictEqual( out.dtype, 'uint16' );
+		assert.deepEqual( out.data, d2 );
+	});
+
+	it( 'should return an empty data structure if provided an empty data structure', function test() {
+		assert.deepEqual( multiply( [], 1 ), [] );
+		assert.deepEqual( multiply( matrix( [0,0] ), 1 ).data, matrix( [0,0] ).data );
+		assert.deepEqual( multiply( new Int8Array(), 1 ), new Float64Array() );
 	});
 
 });

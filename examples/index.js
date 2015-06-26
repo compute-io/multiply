@@ -1,14 +1,83 @@
 'use strict';
 
-var multiply = require( './../lib' );
+var matrix = require( 'dstructs-matrix' ),
+	multiply = require( './../lib' );
 
-// Simulate some data...
-var data = new Array( 100 );
+var data,
+	mat,
+	out,
+	tmp,
+	i;
 
-for ( var i = 0; i < data.length; i++ ) {
-	data[ i ] = Math.round( Math.random()*100 );
+// ----
+// Plain arrays...
+data = new Array( 10 );
+for ( i = 0; i < data.length; i++ ) {
+	data[ i ] = Math.round( Math.random()*10 );
 }
+out = multiply( data, 10 );
+console.log( 'Arrays: %s\n', out );
 
-multiply( data, 10 );
 
-console.log( data.join( '\n' ) );
+// ----
+// Object arrays (accessors)...
+function getValue( d ) {
+	return d.x;
+}
+for ( i = 0; i < data.length; i++ ) {
+	data[ i ] = {
+		'x': data[ i ]
+	};
+}
+out = multiply( data, 10, {
+	'accessor': getValue
+});
+console.log( 'Accessors: %s\n', out );
+
+
+// ----
+// Deep set arrays...
+for ( i = 0; i < data.length; i++ ) {
+	data[ i ] = {
+		'x': [ i, data[ i ].x ]
+	};
+}
+out = multiply( data, 10, {
+	'path': 'x/1',
+	'sep': '/'
+});
+console.log( 'Deepset:');
+console.dir( out );
+console.log( '\n' );
+
+
+// ----
+// Typed arrays...
+data = new Int32Array( 10 );
+for ( i = 0; i < data.length; i++ ) {
+	data[ i ] = Math.random() * 100;
+}
+tmp = multiply( data, 10 );
+out = '';
+for ( i = 0; i < data.length; i++ ) {
+	out += tmp[ i ];
+	if ( i < data.length-1 ) {
+		out += ',';
+	}
+}
+console.log( 'Typed arrays: %s\n', out );
+
+
+// ----
+// Matrices...
+mat = matrix( data, [5,2], 'int32' );
+out = multiply( mat, 10 );
+console.log( 'Matrix: %s\n', out.toString() );
+
+
+// ----
+// Matrices (custom output data type)...
+out = multiply( mat, 10, {
+	'dtype': 'uint16'
+});
+console.log( 'Matrix (%s): %s\n', out.dtype, out.toString() );
