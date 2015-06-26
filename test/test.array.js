@@ -123,12 +123,33 @@ describe( 'array multiply', function tests() {
 		expected = [ NaN, NaN, NaN, NaN ];
 
 		assert.deepEqual( actual, expected );
+
+		data = [ 1, 2, 3 ];
+		y = null;
+		actual = new Array( data.length );
+		actual = multiply( actual, data, y );
+		expected = [ NaN, NaN, NaN ];
+
+		assert.deepEqual( actual, expected );
+
+		data = [ 1, null, 3 ];
+		y = new Int32Array( [1,2,3] );
+		actual = new Array( data.length );
+		actual = multiply( actual, data, y );
+		expected = [ 1, NaN, 9 ];
+
+		assert.deepEqual( actual, expected );
+
 	});
 
 	it( 'should throw an error if provided an array to be added which is not of equal length to the input array', function test() {
 		expect( foo ).to.throw( Error );
 		function foo() {
 			multiply( [], [1,2], [1,2,3] );
+		}
+		expect( foo2 ).to.throw( Error );
+		function foo2() {
+			multiply( [], [1,2], new Int32Array( [1,2,3] ) );
 		}
 	});
 
